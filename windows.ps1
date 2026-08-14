@@ -28,7 +28,7 @@ Write-Host ""
 # 3. Create venv + install python requirements
 Write-Host "[3/5] Creating virtual environment and installing Python packages..."
 if (-not (Test-Path ".venv")) {
-    python -m venv .venv
+    py -3.12 -m venv .venv
 }
 & ".venv\Scripts\python.exe" -m pip install --upgrade pip
 & ".venv\Scripts\python.exe" -m pip install -r requirements\base.txt
