@@ -21,3 +21,4 @@ database/
 media/
 uvicorn.log
 .venv/
+*.out
