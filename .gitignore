@@ -20,4 +20,4 @@ database/
 .env
 media/
 uvicorn.log
-.venv
+.venv/
