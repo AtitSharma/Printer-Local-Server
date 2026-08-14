@@ -61,16 +61,17 @@ def _fmt_dt(value):
 
 
 def _amount_in_words(total: float) -> str:
-    words = num2words(total, to="currency", lang="en")
-    words = (
-        words.replace("euro,", "and")
-        .replace("cents", "paisa")
-        .replace("cent", "paisa")
-        .strip()
-    )
-    if not words.startswith("Rs"):
-        words = f"Rs {words}"
-    return words
+    total = round(total, 2)
+    rupees = int(total)
+    paisa = round((total - rupees) * 100)
+
+    rupees_words = num2words(rupees, lang="en")
+
+    if paisa > 0:
+        paisa_words = num2words(paisa, lang="en")
+        return f"Rs: {str(rupees_words).capitalize()} and {paisa_words} paisa"
+
+    return f"Rs: {rupees_words}"
 
 
 def build_receipt(payload: dict) -> list[tuple[str, str]]:
@@ -180,21 +181,16 @@ def build_receipt(payload: dict) -> list[tuple[str, str]]:
     total = payload.get("total_amount", 0) or 0
     non_taxable = max(0, gross - taxable - discount)
 
-    l(f"{'Gross Amount   :':<18}{gross:>12.2f}")
+    l(f"{'             Gross Amount :':<18}{gross:>12.2f}")
     if discount > 0:
-        l(f"{'Discount       :':<18}{-discount:>12.2f}")
-    l(f"{'Taxable        :':<18}{taxable:>12.2f}")
+        l(f"{'             Discount     :':<18}{-discount:>12.2f}")
+    l(f"{'             Taxable      :':<18}{taxable:>12.2f}")
     sc = payload.get("service_charge_amount", 0) or 0
     if sc > 0:
-        l(f"{'Service Charge :':<18}{sc:>12.2f}")
-    l(f"{'NonTaxable     :':<18}{non_taxable:>12.2f}")
-    l(f"{'VAT ' + str(int(vat_rate)) + '%        :':<18}{vat_amount:>12.2f}")
-    l(f"{'Net Amount     :':<18}{total:>12.2f}")
-
-    l(SEP)
-
-    l(f"{'Tender         :':<18}{total:>12.2f}")
-    l(f"{'Change         :':<18}{0:>12.2f}")
+        l(f"{'             Service Charge:':<18}{sc:>12.2f}")
+    l(f"{'             NonTaxable   :':<18}{non_taxable:>12.2f}")
+    l(f"{'             VAT ' + str(int(vat_rate)) + '%      :':<18}{vat_amount:>12.2f}")
+    l(f"{'             Net Amount   :':<18}{total:>12.2f}")
 
     l(SEP)
 
@@ -216,9 +212,6 @@ def build_receipt(payload: dict) -> list[tuple[str, str]]:
         for wl in _wrap(msg, W):
             l(wl)
 
-    l(SEP)
-    l(f"Counter : {settings.counter}")
-    l(f"Cashier : {settings.cashier}")
     l(SEP)
 
     return lines

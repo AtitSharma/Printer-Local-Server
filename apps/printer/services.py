@@ -50,6 +50,14 @@ class PrinterService:
         print_service = PrintService(printer)
         result = await print_service.print_invoice(payload)
 
+        if result.get("success"):
+            try:
+                await self.gateway.increment_print_count(invoice_id)
+                result["print_count_incremented"] = True
+            except Exception as e:
+                result["print_count_incremented"] = False
+                result["print_count_error"] = str(e)
+
         result["invoice_id"] = str(invoice.get("id"))
         result["invoice_number"] = invoice.get("invoice_number")
         result["printer"] = printer.get("name") or printer.get("ip_address")

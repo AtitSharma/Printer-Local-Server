@@ -73,22 +73,47 @@ def get_printers(facility_id: str):
                 "is_default": True,
             },
             {
-                "id": "printer-2",
-                "name": "USB Receipt",
-                "facility_id": facility_id,
-                "connection_type": "USB",
-                "printer_type": "RECEIPT",
-                "device_type": "THERMAL",
-                "vendor_id": "0x1fc9",
-                "product_id": "0x2016",
-                "is_default": False,
-            },
-        ]
+"id": "printer-2",
+            "name": "USB Receipt",
+            "facility_id": facility_id,
+            "connection_type": "USB",
+            "printer_type": "RECEIPT",
+            "device_type": "THERMAL",
+            "vendor_id": "0x1fc9",
+            "product_id": "0x2016",
+            "is_default": False,
+        },
+        {
+            "id": "printer-local",
+            "name": "Local Fake",
+            "facility_id": facility_id,
+            "connection_type": "NETWORK",
+            "printer_type": "RECEIPT",
+            "device_type": "THERMAL",
+            "ip_address": "127.0.0.1",
+            "port": "19100",
+            "is_default": False,
+        },
+    ]
     )
 
 
 @app.get("/printer/get-printer/{printer_id}")
 def get_printer(printer_id: str):
+    if printer_id == "printer-local":
+        return ok(
+            {
+                "id": printer_id,
+                "name": "Local Fake",
+                "facility_id": "bb9d7ed-8b6d-4313-9da9-fd4ef5522c91",
+                "connection_type": "NETWORK",
+                "printer_type": "RECEIPT",
+                "device_type": "THERMAL",
+                "ip_address": "127.0.0.1",
+                "port": "19100",
+                "is_default": True,
+            }
+        )
     return ok(
         {
             "id": printer_id,
@@ -100,6 +125,17 @@ def get_printer(printer_id: str):
             "ip_address": "192.168.123.100",
             "port": "9100",
             "is_default": True,
+        }
+    )
+
+
+@app.post("/printer/increment-print-count/{invoice_id}")
+def increment_print_count(invoice_id: str):
+    return ok(
+        {
+            "invoice_id": invoice_id,
+            "invoice_number": "FV-2024-0001",
+            "total_print_generated": 2,
         }
     )
 

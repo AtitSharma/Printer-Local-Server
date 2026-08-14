@@ -60,3 +60,42 @@ class POSGateway:
     async def get_printer(self, printer_id: str) -> dict:
         """Fetch a single printer config from the POS."""
         return await self._get(f"/printer/get-printer/{printer_id}")
+
+    async def increment_print_count(self, invoice_id: str) -> dict:
+        """Increment the print count for an invoice on the POS."""
+        return await self._post(f"/printer/increment-print-count/{invoice_id}")
+
+    async def _post(self, path: str, body: dict | None = None) -> dict:
+        if not self.base_url or not self.token:
+            raise BadRequest(
+                message="POS_URL or POS_TOKEN not set in .env",
+                exception_type="pos.missing_config",
+            )
+
+        url = f"{self.base_url}/pos{path}"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    url, headers=self._headers(), json=body
+                )
+        except httpx.HTTPError as e:
+            raise BadRequest(
+                message=f"Could not reach POS at {self.base_url}: {e}",
+                exception_type="pos.unreachable",
+            )
+
+        if resp.status_code != 200:
+            raise BadRequest(
+                message=f"POS request failed: HTTP {resp.status_code} - {resp.text}",
+                exception_type="pos.request_failed",
+            )
+
+        data = resp.json()
+
+        if not data.get("success"):
+            raise BadRequest(
+                message=f"POS request failed: {data.get('message')}",
+                exception_type="pos.request_failed",
+            )
+
+        return data.get("data")
